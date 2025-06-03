@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+<title>Авторизация</title>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="app-header">
+            <img src="images/logo.png" alt="Логотип Fitness Tracker" class="logo">
+            <h2 class="app-title">ТВОЙ ФИТНЕС-ТРЕКЕР</h2>
+        </div>
+        <hr class="divider">
+
+        <h1>Авторизация</h1>
+        <div class="form_desc">Войдите или зарегистрируйтесь, чтобы продолжить</div>
+    <form class="auth-form" action="/login" method="post">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="login" placeholder="Введите ваш email" required>
+
+        <label for="password">Пароль</label>
+        <input type="password" id="password" name="pass" placeholder="Введите пароль" required>
+        <div class="messages">
+                <% if (error === 'empty') { %>
+                <p class="error">Заполните все поля.</p>
+                <% } else if (error === 'invalid') { %>
+                <p class="error">Пользователь не найден.</p>
+                <% } else if (registered) { %>
+                <p class="success" style="color: #6fa043">Новая учётная запись создана!</p> 
+                <% } %>
+            </div>
+                
+        <button type="submit" class="auth-button">Войти</button>
+        <!--<button type="button" class="auth-button" onclick="window.location.href='/register'">Регистрация</button>-->
+    </form>
+    <div class="links-container">
+        <a href="/reg">Регистрация</a>
+        <a href="/lost_pass">Забыли пароль?</a>
+    </div>
+    </div>
+</body>
+</html>
