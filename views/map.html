@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/style.css">
+    <title>Карта</title>
+</head>
+<body>
+    <div class="board-container">
+        <div class="map-container">
+            <div class="map-title">Места для тренировок рядом</div>
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Введите адрес для поиска" />
+                <button id="search-button">Найти</button>
+            </div>
+            <div id="map"></div>
+        </div>
+    <nav class="bottom-nav">
+        <ul class="nav-list">
+            <li class="nav-item"><a href="/board">Тренировки</a></li>
+            <li class="nav-item"><a href="/map">Карта</a></li>
+            <li class="nav-item"><a href="/profile">Профиль</a></li>
+        </ul>
+    </nav>
+    </div>
+    <!-- 2GIS Loader -->
+<script src="https://mapgl.2gis.com/api/js/v1?lang=ru" defer ></script>
+<script defer>
+        document.addEventListener('DOMContentLoaded', () => {
+            const response =  fetch('/config');
+            const config = response.json();
+            const apiKey = config.apiKey;
+            let map = null;
+            let searchMarker = null;
+            let searchMarkers = []; // Store fitness club markers and labels
+
+            // Initialize map centered on Perm
+            map = new mapgl.Map('map', {
+                center: [56.317, 58.000], // Perm coordinates (lon, lat)
+                zoom: 14,
+                key: apiKey
+            });
+
+            async function geocodeAddress(address) {
+                const url = `https://catalog.api.2gis.com/3.0/items/geocode?q=${encodeURIComponent(address)}&fields=items.point&key=${apiKey}&city_id=2252422583943339`;
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    console.log('Geocode response:', data);
+                    if (data.result?.items?.length) {
+                        const { lon, lat } = data.result.items[0].point;
+                        return [lon, lat];
+                    } else {
+                        throw new Error('Адрес не найден');
+                    }
+                } catch (err) {
+                    console.error('Geocode error:', err);
+                    alert('Ошибка геокодирования адреса. Убедитесь, что адрес в Перми.');
+                    return null;
+                }
+            }
+
+            async function fetchFitnessClubs(coords) {
+            const pageSize = 10;     // максимум по API
+            const maxPages = 5;      // заготовим до 50 клубов
+            const rawItems = [];
+
+            // 1) Собираем «сырые» данные со всех страниц
+            for (let page = 1; page <= maxPages; page++) {
+                const url = [
+                'https://catalog.api.2gis.com/3.0/items',
+                `?rubric_id=267,268`,                        // фитнес-клуб и тренажёрный зал
+                `&point=${coords[0]},${coords[1]}`,
+                `&radius=2000&type=branch`,
+                `&fields=items.name,items.address_name`,
+                `&sort=distance`,
+                `&page_size=${pageSize}`,
+                `&page=${page}`,
+                `&key=${apiKey}`,
+                `&city_id=2252422583943339`
+                ].join('');
+
+                const response = await fetch(url);
+                const data = await response.json();
+                const items = data.result?.items || [];
+                if (!items.length) break;         // вышли, если на этой странице ничего нет
+
+                rawItems.push(...items);
+            }
+
+            if (!rawItems.length) {
+                alert('Фитнес-клубы в радиусе 2 км не найдены.');
+                return [];
+            }
+
+            // 2) Геокодим каждый адрес и отбираем только те, у которых есть координаты
+            const geocodePromises = rawItems.map(async item => {
+                const address = item.address_name || item.name;
+                const coordinates = await geocodeAddress(`${address}, Пермь`);
+                return coordinates
+                ? { name: item.name, address: item.address_name, coordinates }
+                : null;
+            });
+
+            const results = (await Promise.all(geocodePromises)).filter(x => x !== null);
+            return results;
+            }
+
+            async function searchAddress(address) {
+                if (!address.trim()) {
+                    alert('Пожалуйста, введите адрес.');
+                    return;
+                }
+                // Clear previous markers
+                if (searchMarker) searchMarker.destroy();
+                searchMarkers.forEach(item => {
+                    if (item.marker) item.marker.destroy();
+                    if (item.label) item.label.destroy();
+                });
+                searchMarkers = [];
+
+                // Geocode the searched address
+                const coords = await geocodeAddress(`Пермь, ${address.trim()}`);
+                if (!coords) return;
+
+                // Update map and add search marker
+                map.setCenter(coords);
+                map.setZoom(14);
+                searchMarker = new mapgl.Marker(map, {
+                    coordinates: coords,
+                    icon: 'https://docs.2gis.com/img/mapgl/marker.svg',
+                    label: {
+                        text: "Вы здесь",
+                        offset: [0, 35],
+                        relativeAnchor: [0.5, -0.5],
+                        image: {
+                            // берём готовый шаблон с треугольником
+                            url: 'https://docs.2gis.com/img/mapgl/tooltip-top.svg',
+                            // чуть поменьше, чтобы на отдалении не казалось толстым
+                            size: [150, 50],
+                            // один зон растяжения по Х (сохраняем углы по 10px)
+                            stretchX: [[20, 135]],
+                            // зона растяжения по Y (отсекаем треугольник снизу)
+                            stretchY: [[15, 45]],
+                            // внутренние отступы [top, right, bottom, left]
+                            padding: [14, 10, 8, 8],
+                        },
+                        style: {
+                            fontSize: '10px',
+                            color: '#ff0000 !important',
+                            textAlign: 'center',
+                            whiteSpace: 'pre'
+                        }
+                    }
+                });
+
+                // Fetch and display fitness clubs
+                const fitnessClubs = await fetchFitnessClubs(coords);
+                fitnessClubs.forEach(club => {
+                const m = new mapgl.Marker(map, {
+                    coordinates: club.coordinates,
+                    icon: 'https://docs.2gis.com/img/mapgl/marker.svg',
+                    // вот тут внутрь маркера «вшиваем» бабл-лейбл
+                    label: {
+                    text: `${club.name}\n${club.address || 'Адрес не указан'}`,
+                    // сдвигаем бабл чуть выше и по центру
+                    offset: [0, 35],
+                    relativeAnchor: [0.5, -0.5],
+                    image: {
+                        // берём готовый шаблон с треугольником
+                        url: 'https://docs.2gis.com/img/mapgl/tooltip-top.svg',
+                        // чуть поменьше, чтобы на отдалении не казалось толстым
+                        size: [250, 50],
+                        // один зон растяжения по Х (сохраняем углы по 10px)
+                        stretchX: [[20, 239]],
+                        // зона растяжения по Y (отсекаем треугольник снизу)
+                        stretchY: [[15, 38]],
+                        // внутренние отступы [top, right, bottom, left]
+                        padding: [14, 10, 10, 10],
+                    },
+                    style: {
+                        fontSize: '10px',
+                        color: '#000',
+                        textAlign: 'center',
+                        whiteSpace: 'pre'
+                    }
+                    }
+                })
+    searchMarkers.push({ marker: m });
+});               
+
+                if (!fitnessClubs.length) {
+                    alert('Фитнес-клубы в радиусе 2 км не найдены.');
+                }
+            }
+
+            // Event listeners
+            const input = document.getElementById('search-input');
+            const button = document.getElementById('search-button');
+
+            button.addEventListener('click', () => searchAddress(input.value));
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') searchAddress(input.value);
+            });
+        });
+    </script>
+</body>
+</html>
+
