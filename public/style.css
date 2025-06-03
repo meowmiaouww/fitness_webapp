@@ -1,0 +1,548 @@
+/* Цветовая палитра */
+:root {
+    --color-dark: #42564F;
+    --color-accent: #77c41f;
+    --color-light: #F7F6E7;
+    --color-pale: #DFDDC5;
+    --color-white: #FFFFFF;
+}
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    font-family: Arial, sans-serif;
+    font-weight: 500;
+    background-color: var(--color-dark);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    padding: 1rem;
+}
+
+/*стили лого*/
+.app-header {
+  display: flex;
+  align-items: center;      /* выравнивание по вертикали */
+  justify-content: center;  /* центруем по горизонтали */
+  gap: 0.75rem;             /* расстояние между логотипом и текстом */
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.logo {
+  width: 60px;  /* оставляем прежний размер */
+  height: auto;
+  margin: 0;    /* убираем автозагугленные отступы */
+}
+
+.app-title {
+  font-size: 1.5rem;
+  font-style:normal;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  background: linear-gradient(50deg, var(--color-accent), var(--color-dark));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;    /* обнуляем возможные отступы у заголовка */
+  text-align:left;
+}
+
+.divider {
+    border: none;
+    height: 1px;
+    background: var(--color-pale);
+    margin: 1.5rem 0;
+}
+
+/*стили формы*/
+.auth-container {
+    background-color: var(--color-white);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+}
+.auth-container h1 {
+    margin-bottom: 1.5rem;
+    color: var(--color-dark);
+    font-size: 1.5rem;
+    word-wrap: break-word;
+}
+
+.form_desc {
+    margin-bottom: 1.5rem;
+    color: var(--color-dark);
+    font-size: 1rem;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+}
+.auth-form label {
+    margin-bottom: 0.5rem;
+    text-align: left;
+    color: var(--color-dark);
+    font-size: 0.9rem;
+    word-wrap: break-word;
+}
+.auth-form input {
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--color-pale);
+    border-radius: 4px;
+    font-size: 1rem;
+    width: 100%;
+}
+.auth-button {
+    padding: 0.75rem;
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--color-white);
+    background: linear-gradient(60deg, var(--color-accent), var(--color-dark));
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.3s;
+    margin-bottom: 0.75rem;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.auth-button:hover {
+    opacity: 0.9;
+}
+.links-container {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+.links-container a {
+    color: var(--color-dark);
+    text-decoration: none;
+    transition: color 0.3s;
+    flex: 1 1 auto;
+    text-align: center;
+    word-wrap: break-word;
+}
+.links-container a:hover {
+    color: var(--color-accent);
+}
+.messages {
+  margin-bottom: 1rem;
+  color:#e74c3c;
+}
+
+  /* Адаптивность */
+@media (max-width: 480px) {
+    .auth-container {
+        padding: 1rem;
+    }
+    .auth-container h1 {
+        font-size: 1.25rem;
+    }
+    .auth-form label {
+        font-size: 0.85rem;
+    }
+    .auth-form input {
+        font-size: 0.9rem;
+    }
+    .auth-button {
+        font-size: 0.95rem;
+        padding: 0.6rem;
+    }
+    .links-container {
+        font-size: 0.85rem;
+    }
+    .form_desc {
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+}
+
+/* ОСНОВНЫЕ БЛОКИ */
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* Board container */
+.board-container {
+  background-color: var(--color-dark);
+  color: var(--color-dark);
+  font-family: Arial, sans-serif;
+  height: 100vh;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Page content: only main panel now */
+.page-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  flex: 1;
+  position: relative;
+}
+.main-panel {
+  flex: 1;
+  background-color: var(--color-white);
+  padding: 1rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+h1 {
+  margin: 0 auto;
+}
+.add-icon {
+  display: block;           /* теперь и <a> и <button> растягиваются */
+  width: 100%;              /* занимают всю ширину родителя */
+  box-sizing: border-box;   /* чтобы padding не «вылазил» за границы */
+  font-size: 1.5rem;
+  color: var(--color-accent);
+  margin: 0.5rem 0;         /* вертикальные отступы между кнопками */
+  cursor: pointer;
+  padding: 1.2rem;
+  background-color: var(--color-dark);
+  border-radius: 12px;
+  border: none;
+  text-decoration: none;    /* для <a> убираем подчеркивание */
+  text-align: center;       /* центрируем текст внутри */
+}
+  
+  .add-icon:hover {
+    color: var(--color-light);
+  }
+
+/* Bottom navigation */
+
+/* сам контейнер навигации — оставляем фиксированным и «в воздухе» */
+.bottom-nav {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 2rem);
+  max-width: 400px;
+  background-color: var(--color-white);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 150;
+}
+
+/* сбрасываем маркеры и выстраиваем в строку */
+.bottom-nav .nav-list {
+  display: flex;
+  justify-content: space-around;
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0; /* немного вертикальных отступов */
+}
+
+/* стили для ссылок */
+.bottom-nav .nav-item a {
+  display: block;
+  padding: 0.5rem 1rem;
+  color: var(--color-dark);
+  text-decoration: none;
+  font-size: 1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* эффект при наведении */
+.bottom-nav .nav-item a:hover {
+  background-color: var(--color-pale);
+  color: var(--color-dark);
+}
+
+/* адаптив — подгоняем шрифты на мобилках */
+@media (max-width: 600px) {
+  .bottom-nav .nav-item a {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+  }
+}
+
+/* Подсветка при наведении */
+.bottom-nav .nav-item:hover {
+  background-color: var(--color-pale);
+  border-radius: 10px;
+  /* если нужно, можно и цвет текста изменить, например: */
+  /* color: var(--color-dark); */
+}
+  
+  /* Responsive adjustments */
+@media (max-width: 600px) {
+    .main-panel {
+      flex: 1;
+      width: 100%;
+      padding: 1rem;
+    }
+    .note-item {
+      padding: 0.5rem;
+    }
+    .note-title {
+      font-size: 0.95rem;
+    }
+    .note-date {
+      font-size: 0.8rem;
+    }
+    .add-icon {
+      font-size: 2rem;
+    }
+    .nav-item {
+      font-size: 0.85rem;
+    }
+  }
+  
+/* КАРТА */
+
+.map-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--color-white);
+}
+
+.map-title {
+  text-align: center;
+  padding: 1rem;
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--color-accent);
+}
+.search-container {
+  display: flex;
+  padding: 1rem ;
+  margin: 0.5rem 0;
+}
+.search-container input {
+  flex: 1;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: none;
+  border-bottom: 1px solid var(--color-pale);
+  border-right: none;
+}
+.search-container button {
+  font-size: 1rem;
+  border: none;
+  border-radius: 4px;
+  background: linear-gradient(45deg, var(--color-accent), var(--color-dark));
+  color: var(--color-white);
+  cursor: pointer;
+  transition: opacity 0.3s;
+  margin-left: 1rem;
+  padding: 0 0.5rem;
+}
+.search-container button:hover {
+  opacity: 0.9;
+}
+#map {
+  flex: 1;
+  min-height: 200px;    
+}
+.red-marker {
+  stroke: #e74c3c;
+  fill: #e74c3c;
+}
+.blue-marker {
+  stroke: #3498db;
+  fill: #3498db;
+}
+/* Адаптив */
+@media (max-width: 600px) {
+  .map-title {
+    font-size: 1.25rem;
+  }
+  .search-container input,
+  .search-container button {
+    font-size: 0.9rem;
+    padding: 0.4rem;
+  }
+}
+
+/* УПРАЖНЕНИЯ */
+
+.exercise-list {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 2.5rem;
+}
+.exercise-item {
+  background-color: var(--color-light);
+  border-radius: 4px;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+}
+.exercise-item:last-child {
+  margin-bottom: 0;
+}
+.exercise-name {
+  font-weight: bold;
+  color: var(--color-dark);
+  font-size: 1rem;
+}
+.exercise-item .exercise-name { /* Названию упражнения даём право занимать всё доступное место */
+  flex: 1;
+}
+/* Кнопка удаления отталкивается вправо */
+.exercise-item .delete-exrc-button {
+  margin-left: 1rem;  /* небольшой отступ перед крестиком */
+  background: transparent;
+  color: var(--color-dark);
+  border: none;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+.btn-text { display: inline; }
+.btn-icon { display: none; }
+
+/* Media-query для мобильных */
+@media (max-width: 480px) {
+  /* Скрываем текст и показываем иконки */
+  .btn-text { display: none; }
+  .btn-icon { display: inline; }
+
+  /* Уменьшаем паддинги, чтобы кнопки были квадратнее */
+  .search-container button {
+    padding: 0.5rem;
+  }
+}
+.delete-exrc-button .btn-icon {
+  display: inline;         /* или inline-block */
+}
+
+/* ДОБАВИТЬ УПРАЖНЕНИЕ */
+
+/* Центрируем форму и задаём ей контейнер */
+#add-workout-form {
+  max-width: 600px;             /* ширина формы */
+  margin: 2rem auto;            /* вертикальный отступ и центр по горизонтали */
+  padding: 2rem;                /* внутренние отступы */
+  background: var(--color-pale);          /* белый фон */
+  border-radius: 8px;           /* скруглённые углы */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* лёгкая тень */
+  box-sizing: border-box;
+}
+
+/* Отступ между полями */
+#add-workout-form > div,
+#add-workout-form h2 {
+  margin-bottom: 1rem;
+}
+
+/* Стили для меток */
+#add-workout-form label {
+  display: block;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Стили для текстовых полей и селектов */
+#add-workout-form input[type="text"],
+#add-workout-form input[type="date"],
+#add-workout-form select {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+/* Заголовок формы */
+#add-workout-form h2 {
+  font-size: 1.25rem;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 0.25rem;
+  color: #444;
+}
+
+/* Контейнер одного упражнения */
+.exercise-block {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 1rem;
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+/* Кнопка удаления в углу */
+.exercise-block .remove-exercise {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  color: #888;
+  cursor: pointer;
+}
+.exercise-block .remove-exercise:hover {
+  color: #e74c3c;
+}
+
+/* Параметры подхода */
+.set-params .param {
+  margin-top: 0.75rem;
+}
+
+.exercise-metrics {
+  margin-bottom: 1.5rem;
+}
+
+.input_load {
+  padding: 0.6rem 0.8rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+ 
+}
+
+/* Кнопки внизу формы */
+#add-exercise-btn,
+#add-workout-form button[type="submit"] {
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  margin-right: 0.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background: linear-gradient(45deg, var(--color-accent), var(--color-dark));
+  color: var(--color-white);
+  transition: background 0.2s;
+}
+#add-exercise-btn:hover,
+#add-workout-form button[type="submit"]:hover {
+  opacity: 0.9;;
+}
