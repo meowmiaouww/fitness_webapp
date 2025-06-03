@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Смена пароля</title>
+</head>
+<body>
+    <div class="auth-container">
+        <h1>Смена пароля</h1>
+        <div class="form_desc">Введите старый и новый пароли</div>
+        <form class="auth-form" action="/change_pass" method="post">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="login" value="<%= login %>" readonly>
+
+            <label for="password">Старый пароль</label>
+            <input type="password" id="newPass" name="passOld" placeholder="Введите старый пароль" required>
+
+            <label for="password">Новый пароль</label>
+            <input type="password" id="newPassCopy" name="passNew" placeholder="Введите новый пароль" required>
+            <div class="messages">
+                <% if (error === 'empty') { %>
+                    <p class="error">Заполните все поля.</p>
+                <% } else if (error === 'wrongpass') { %>
+                    <p class="error">Неверный старый пароль.</p>
+                <% } else if (error === 'server') { %>
+                    <p class="error">Ошибка сервера. Попробуйте позже.</p>
+                <% } else if (success) { %>
+                    <p class="success" style="color: #6fa043">Пароль успешно обновлён!</p>
+                <% } %>
+            </div>
+            <button type="submit" class="auth-button">Восстановить пароль</button>
+        </form>
+        <div class="links-container">
+            <a href="/profile">Вернуться в профиль</a>
+        </div>
+    </div>
+</body>
+</html>
