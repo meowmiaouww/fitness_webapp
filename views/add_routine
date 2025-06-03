@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="/style.css"/>
+  <title><%= workoutData ? 'Редактировать тренировку' : 'Новая тренировка' %></title>
+  <style>
+    .exercise-block {
+      position: relative;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: #f9f7ee;
+      border-radius: 6px;
+    }
+    .exercise-block .remove-exercise {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: transparent;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: #555;
+    }
+    .exercise-block .remove-exercise:hover {
+      color: #e74c3c;
+    }
+    .exercise-metrics {
+      margin-bottom: 0.75rem;
+    }
+    .exercise-metrics label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+    .exercise-metrics select,
+    .set-params input {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      margin-bottom: 0.5rem;
+    }
+    .set-params .param {
+      display: none;
+      margin-bottom: 0.5rem;
+    }
+    .add-routine-button {
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      margin-right: 0.5rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #fff;
+      background: #28a745;
+      transition: background 0.2s;
+    }
+    .add-routine-button:hover {
+      background: #218838;
+    }
+  </style>
+</head>
+<body>
+  <div class="board-container">
+    <div class="page-content">
+      <main class="main-panel">
+        <h1><%= workoutData ? 'Редактировать тренировку' : 'Новая тренировка' %></h1>
+        <form id="add-workout-form" action="/add_routine" method="post">
+          <% if (workoutData) { %>
+            <input type="hidden" name="workout_id" value="<%= workoutData.id %>">
+          <% } %>
+
+          <!-- Название тренировки -->
+          <div>
+            <label for="workout-title">Название тренировки</label><br/>
+            <input 
+              type="text" 
+              id="workout-title" 
+              name="title" 
+              placeholder="Введите название тренировки" 
+              required
+              value="<%= workoutData ? workoutData.title : '' %>"
+            >
+          </div>
+
+          <!-- Дата тренировки -->
+          <div>
+            <label for="workout-date">Дата</label><br/>
+            <input 
+              type="date" 
+              id="workout-date" 
+              name="created_at" 
+              required
+              value="<%= workoutData ? workoutData.created_at : new Date().toISOString().slice(0,10) %>"
+            >
+          </div>
+
+          <h2>Упражнения</h2>
+          <div id="exercises-container">
+            <% 
+              const initialExercises = workoutData ? workoutData.exercises : [ {} ];
+              initialExercises.forEach((ex, idx) => {
+                const isExisting = Boolean(workoutData);
+                const wrktExrcId    = isExisting ? ex.wrkt_exrc_id : '';
+                const selExerciseId = isExisting ? ex.exercise_id : '';
+                const selSetType    = isExisting ? ex.set_type : '';
+                const valReps       = isExisting ? ex.reps : '';
+                const valWeight     = isExisting ? ex.weight : '';
+                const valDuration   = isExisting ? ex.duration_s : '';
+                const valDistance   = isExisting ? ex.distance : '';
+            %>
+            <div class="exercise-block" data-index="<%= idx %>">
+              <% if (isExisting) { %>
+                <input type="hidden" name="exercises[<%= idx %>][wrkt_exrc_id]" value="<%= wrktExrcId %>">
+              <% } %>
+              <button type="button" class="remove-exercise" aria-label="Удалить упражнение">×</button>
+
+              <div class="exercise-metrics">
+                <label>Упражнение</label>
+                <select name="exercises[<%= idx %>][id_exercise]" class="exercise-select" required>
+                  <option value="">— Выберите упражнение —</option>
+                  <% exercises.forEach(function(e) { %>
+                    <option 
+                      value="<%= e.id_exrc %>" 
+                      <%= (e.id_exrc === selExerciseId) ? 'selected' : '' %>
+                    ><%= e.name_exrc %></option>
+                  <% }) %>
+                </select>
+              </div>
+
+              <div class="exercise-metrics">
+                <label>Тип нагрузки</label>
+                <select name="exercises[<%= idx %>][set_type]" class="set-type-select" required>
+                  <option value="">— Выберите тип нагрузки —</option>
+                  <option value="weight_reps"    <%= selSetType==='weight_reps' ? 'selected' : '' %>>Вес и повторения</option>
+                  <option value="weight_time"    <%= selSetType==='weight_time' ? 'selected' : '' %>>Вес и время</option>
+                  <option value="reps"           <%= selSetType==='reps' ? 'selected' : '' %>>Только повторения</option>
+                  <option value="distance_time"  <%= selSetType==='distance_time' ? 'selected' : '' %>>Дистанция и время</option>
+                  <option value="time"           <%= selSetType==='time' ? 'selected' : '' %>>Время</option>
+                </select>
+              </div>
+
+              <div class="set-params">
+                <div class="param weight-field" style="<%= (selSetType==='weight_reps' || selSetType==='weight_time') ? 'display:block' : 'display:none' %>">
+                  <label>Вес (кг)</label>
+                  <input 
+                    type="number" 
+                    name="exercises[<%= idx %>][weight]" 
+                    step="0.1" 
+                    min="0" 
+                    value="<%= valWeight %>"
+                  >
+                </div>
+                <div class="param reps-field" style="<%= (selSetType==='weight_reps' || selSetType==='reps') ? 'display:block' : 'display:none' %>">
+                  <label>Повторения</label>
+                  <input 
+                    type="number" 
+                    name="exercises[<%= idx %>][reps]" 
+                    min="1" 
+                    value="<%= valReps %>"
+                  >
+                </div>
+                <div class="param time-field" style="<%= (selSetType==='weight_time' || selSetType==='distance_time' || selSetType==='time') ? 'display:block' : 'display:none' %>">
+                  <label>Время (сек)</label>
+                  <input 
+                    type="number" 
+                    name="exercises[<%= idx %>][duration_s]" 
+                    min="1" 
+                    value="<%= valDuration %>"
+                  >
+                </div>
+                <div class="param distance-field" style="<%= selSetType==='distance_time' ? 'display:block' : 'display:none' %>">
+                  <label>Дистанция (м)</label>
+                  <input 
+                    type="number" 
+                    name="exercises[<%= idx %>][distance]" 
+                    step="0.1" 
+                    min="0" 
+                    value="<%= valDistance %>"
+                  >
+                </div>
+              </div>
+            </div>
+            <% }) %>
+          </div>
+
+          <button type="button" id="add-exercise-btn" class="add-routine-button">Добавить ещё упражнение</button>
+          <button type="submit" class="add-routine-button">Сохранить тренировку</button>
+        </form>
+      </main>
+    </div>
+
+    <nav class="bottom-nav">
+      <ul class="nav-list">
+        <li class="nav-item"><a href="/board">Тренировки</a></li>
+        <li class="nav-item"><a href="/map">Карта</a></li>
+        <li class="nav-item"><a href="/profile">Профиль</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const container = document.getElementById('exercises-container');
+      const addBtn = document.getElementById('add-exercise-btn');
+
+      function updateIndices() {
+        container.querySelectorAll('.exercise-block').forEach((block, idx) => {
+          block.dataset.index = idx;
+          block.querySelector('.exercise-select')
+               .name = `exercises[${idx}][id_exercise]`;
+          block.querySelector('.set-type-select')
+               .name = `exercises[${idx}][set_type]`;
+          block.querySelector('.weight-field input')
+               .name = `exercises[${idx}][weight]`;
+          block.querySelector('.reps-field input')
+               .name = `exercises[${idx}][reps]`;
+          block.querySelector('.time-field input')
+               .name = `exercises[${idx}][duration_s]`;
+          block.querySelector('.distance-field input')
+               .name = `exercises[${idx}][distance]`;
+
+          const hidden = block.querySelector('input[type="hidden"][name$="[wrkt_exrc_id]"]');
+          if (hidden) {
+            hidden.name = `exercises[${idx}][wrkt_exrc_id]`;
+          }
+        });
+      }
+
+      function onTypeChange(e) {
+        const block = e.target.closest('.exercise-block');
+        const type = e.target.value;
+        block.querySelectorAll('.set-params .param')
+          .forEach(p => p.style.display = 'none');
+
+        if (type === 'weight_reps') {
+          block.querySelector('.weight-field').style.display = 'block';
+          block.querySelector('.reps-field').style.display = 'block';
+        } else if (type === 'weight_time') {
+          block.querySelector('.weight-field').style.display = 'block';
+          block.querySelector('.time-field').style.display = 'block';
+        } else if (type === 'reps') {
+          block.querySelector('.reps-field').style.display = 'block';
+        } else if (type === 'distance_time') {
+          block.querySelector('.distance-field').style.display = 'block';
+          block.querySelector('.time-field').style.display = 'block';
+        } else if (type === 'time') {
+          block.querySelector('.time-field').style.display = 'block';
+        }
+      }
+
+      function attachHandlers(block) {
+        block.querySelector('.set-type-select')
+             .addEventListener('change', onTypeChange);
+        block.querySelector('.remove-exercise')
+             .addEventListener('click', () => {
+               block.remove();
+               updateIndices();
+             });
+      }
+
+      container.querySelectorAll('.exercise-block').forEach(attachHandlers);
+      updateIndices();
+
+      addBtn.addEventListener('click', () => {
+        const first = container.querySelector('.exercise-block');
+        const clone = first.cloneNode(true);
+        clone.querySelectorAll('input').forEach(i => {
+          if (i.type !== 'hidden') i.value = '';
+        });
+        clone.querySelector('select.exercise-select').value = '';
+        clone.querySelector('select.set-type-select').value = '';
+        clone.querySelectorAll('.set-params .param')
+             .forEach(p => p.style.display = 'none');
+
+        container.appendChild(clone);
+        attachHandlers(clone);
+        updateIndices();
+      });
+    });
+  </script>
+</body>
+</html>
