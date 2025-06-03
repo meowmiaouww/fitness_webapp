@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Упражнения</title>
+</head>
+<body>
+    <div class="board-container">
+        <div class="page-content">
+            <main class="main-panel">
+                <h1 style="color:var(--color-dark);">Мои упражнения</h1>
+                    <div class="search-container">
+                        <input type="text" id="search-input" placeholder="Введите название упражнения" />
+                        <button id="search-exrc-button">
+                            <span class="btn-text">Найти</span>
+                            <span class="btn-icon" aria-hidden="true">🔍</span>
+                        </button>
+                        <button id="add-exrc-button">
+                            <span class="btn-text">Добавить</span>
+                            <span class="btn-icon" aria-hidden="true">➕</span>
+                        </button>
+                    </div>
+                    <div class="exercise-list">
+                    <% if (typeof exercises === 'undefined' || !exercises || exercises.length === 0) { %>
+                        <p>Упражнений пока нет.</p>
+                    <% } else { %>
+                        <% exercises.forEach(ex => { %>
+                        <div class="exercise-item" data-id="<%= ex.id_exrc %>">
+                            <div class="exercise-name"><%= ex.name_exrc %></div>
+                            <!-- Кнопка удаления -->
+                            <button class="delete-exrc-button" aria-label="Удалить упражнение">
+                            <span class="btn-icon" aria-hidden="true">×</span>
+                            </button>
+                        </div>
+                        <% }) %>
+                    <% } %>
+                    </div>
+            </main>
+        </div>
+        <nav class="bottom-nav">
+            <ul class="nav-list">
+                <li class="nav-item"><a href="/board">Тренировки</a></li>
+                <li class="nav-item"><a href="/map">Карта</a></li>
+                <li class="nav-item"><a href="/profile">Профиль</a></li>
+            </ul>
+        </nav>
+    </div>
+<script>
+    const addBtn = document.getElementById('add-exrc-button');
+    const searchBtn = document.getElementById('search-exrc-button');
+    const inputField = document.getElementById('search-input');
+
+// Функция удаления одного упражнения
+async function handleDelete(event) {
+    const btn = event.currentTarget;
+    const item = btn.closest('.exercise-item');
+    const name = item.querySelector('.exercise-name').textContent.trim();
+    const id   = item.dataset.id;
+
+    if (!confirm(`Вы действительно хотите удалить упражнение «${name}» из списка?`)) {
+        return;
+    }
+
+    try {
+        const res = await fetch('/exercises/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_exrc: id })
+        });
+        const data = await res.json();
+        if (data.success) {
+            item.remove();
+        } else {
+            alert(data.message || 'Не удалось удалить упражнение');
+        }
+    } catch (err) {
+        console.error('Fetch error:', err);
+        alert('Ошибка сети при удалении упражнения');
+    }
+}
+
+// Навешиваем обработчики на все существующие кнопки «×»
+function attachDeleteHandlers() {
+document.querySelectorAll('.delete-exrc-button').forEach(btn => {
+    btn.removeEventListener('click', handleDelete);
+    btn.addEventListener('click', handleDelete);
+});
+}
+
+// Инициализация обработчиков удаления при загрузке страницы
+attachDeleteHandlers();
+
+// Обработчик добавления нового упражнения
+addBtn.addEventListener('click', async () => {
+    const name = inputField.value.trim();
+    if (!name) {
+        alert('Пожалуйста, введите название упражнения');
+        return;
+    }
+    try {
+        const res = await fetch('/exercises/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name_exrc: name })
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+            alert(data.message || 'Не удалось добавить упражнение');
+            return;
+        }
+
+        // Очищаем поле ввода
+        inputField.value = '';
+
+        // Создаем новый элемент в списке
+        const list = document.querySelector('.exercise-list');
+        const item = document.createElement('div');
+        item.className = 'exercise-item';
+        item.dataset.id = data.id;
+        item.innerHTML = `
+            <div class="exercise-name">${name}</div>
+            <button class="delete-exrc-button" aria-label="Удалить упражнение">
+            <span class="btn-icon" aria-hidden="true">×</span>
+            </button>
+        `;
+        list.prepend(item);
+
+        // Навешиваем на него обработчик удаления
+        attachDeleteHandlers();
+
+        } catch (err) {
+        console.error('Fetch error:', err);
+        alert('Ошибка сети при добавлении упражнения');
+        }
+    });
+
+//Обработчик кнопки "Найти"
+  document.getElementById('search-exrc-button').addEventListener('click', async () => {
+    const term = document.getElementById('search-input').value.trim();
+    if (!term) {
+      alert('Введите слово или фразу для поиска');
+      return;
+    }
+
+    let res;
+    try {
+      res = await fetch(`/exercises/search?term=${encodeURIComponent(term)}`);
+    } catch (networkErr) {
+      console.error('Network error:', networkErr);
+      return alert('Ошибка сети при поиске');
+    }
+
+    if (!res.ok) {
+      // Сервер вернул 404/500 и, возможно, JSON с message
+      let errData;
+      try { errData = await res.json(); } catch (_) {}
+      console.error('Server error:', res.status, errData);
+      return alert(errData?.message || `Ошибка сервера (${res.status})`);
+    }
+
+    let data;
+    try {
+      data = await res.json();
+    } catch (parseErr) {
+      console.error('Invalid JSON:', parseErr);
+      return alert('Неверный ответ от сервера');
+    }
+
+    if (!data.success) {
+      return alert(data.message || 'Не удалось найти упражнения');
+    }
+
+    // Перерисовываем .exercise-list
+    const list = document.querySelector('.exercise-list');
+    if (data.exercises.length === 0) {
+      list.innerHTML = '<p>Упражнений не найдено.</p>';
+    } else {
+      list.innerHTML = data.exercises.map(ex => `
+        <div class="exercise-item" data-id="${ex.id_exrc}">
+          <div class="exercise-name">${ex.name_exrc}</div>
+          <button class="delete-exrc-button" aria-label="Удалить упражнение">
+            <span class="btn-icon" aria-hidden="true">×</span>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // Навесим обработчики удаления на новые элементы
+    attachDeleteHandlers();
+  });
+</script>
+</body>
+</html>
