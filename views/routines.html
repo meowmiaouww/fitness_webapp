@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Мои тренировки — Fitness Tracker</title>
+    <link rel="stylesheet" href="/style.css" />
+    <style>
+    /* Заголовок страницы */
+        .page-header {
+        text-align: center;
+        color: var(--color-accent);
+        font-size: 2rem;
+        margin: 1.5rem 0;
+        }
+        /* Блок одной тренировки */
+        .workout-item {
+        background-color: var(--color-light);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+        .workout-actions {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        }
+        .workout-actions button {
+        background: transparent;
+        border: none;
+        font-size: 1.2rem;
+        cursor: pointer;
+        margin-left: 0.5rem;
+        color: #555;
+        transition: color 0.2s;
+        }
+        .workout-actions button:hover {
+        color: #e74c3c; /* для удаления */
+        }
+        .workout-actions .edit-btn:hover {
+        color: #3498db; /* для редактирования */
+        }
+        /* Название тренировки */
+        .workout-title {
+        font-size: 1.25rem;
+        color: var(--color-dark);
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        }
+        /* Список упражнений внутри блока */
+        .exercise-list {
+        list-style: none;
+        padding-left: 0;
+        margin-bottom: 0.75rem;
+        }
+        .exercise-list li {
+        font-size: 1rem;
+        color: var(--color-dark);
+        padding: 0.25rem 0;
+        border-bottom: 1px dashed var(--color-pale);
+        }
+        .exercise-list li:last-child {
+        border-bottom: none;
+        }
+        /* Дата тренировки */
+        .workout-date {
+        font-size: 0.85rem;
+        color: #4d4d4d;
+        text-align: right;
+        font-style: italic;
+        }
+        /* Адаптивные правки */
+        @media (max-width: 600px) {
+        .workout-item {
+            padding: 0.75rem;
+        }
+        .workout-title {
+            font-size: 1.1rem;
+        }
+        .exercise-list li {
+            font-size: 0.95rem;
+        }
+        .workout-date {
+            font-size: 0.8rem;
+        }
+        }
+    </style>
+</head>
+<body>
+<div class="board-container">
+    <div class="page-content">
+      
+        <!-- Заголовок страницы -->
+        <h1 class="page-header">Мои тренировки</h1>
+        <% if (!workouts || workouts.length === 0) { %>
+          <p style="text-align:center; color: var(--color-dark);">У вас пока нет сохранённых тренировок.</p>
+        <% } else { %>
+          <% workouts.forEach(workout => { %>
+            <div class="workout-item" data-id="<%= workout.id %>">
+              <!-- Действия: Редактировать и Удалить -->
+              <div class="workout-actions">
+                <!-- Редактировать -->
+                <button class="edit-btn" title="Редактировать" onclick="location.href='/add_routine?workout_id=<%= workout.id %>'">
+                  ✏️
+                </button>
+                <!-- Удалить -->
+                <button class="delete-btn" title="Удалить" onclick="confirmDelete(<%= workout.id %>)">
+                  ❌
+                </button>
+              </div>
+
+              <!-- Название тренировки -->
+              <div class="workout-title"><%= workout.name %></div>
+
+              <!-- Список уникальных упражнений -->
+              <ul class="exercise-list">
+                <% 
+                  const uniqueExercises = Array.from(
+                    new Set(workout.exercises.map(ex => ex.name_exrc))
+                  );
+                  uniqueExercises.forEach(exName => { 
+                %>
+                  <li><%= exName %></li>
+                <% }) %>
+              </ul>
+
+              <!-- Дата тренировки -->
+              <div class="workout-date">
+                <% 
+                  const d = new Date(workout.date);
+                  const formatted = d.toLocaleDateString('ru-RU', {
+                    day: '2-digit', month: '2-digit', year: 'numeric'
+                  });
+                %>
+                <%= formatted %>
+              </div>
+            </div>
+          <% }) %>
+        <% } %>
+</div>
+
+    <nav class="bottom-nav">
+        <ul class="nav-list">
+            <li class="nav-item"><a href="/board">Тренировки</a></li>
+            <li class="nav-item"><a href="/map">Карта</a></li>
+            <li class="nav-item"><a href="/profile">Профиль</a></li>
+        </ul>
+    </nav>
+</div>
+<script>
+    async function confirmDelete(workoutId) {
+      if (!confirm('Вы действительно хотите удалить тренировку?')) return;
+
+      try {
+        const res = await fetch('/routines/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ workout_id: workoutId })
+        });
+        const data = await res.json();
+        if (data.success) {
+          // Удалить блок из DOM
+          const elem = document.querySelector('.workout-item[data-id="'+workoutId+'"]');
+          if (elem) elem.remove();
+        } else {
+          alert(data.message || 'Не удалось удалить тренировку');
+        }
+      } catch (err) {
+        console.error('Ошибка при удалении тренировки:', err);
+        alert('Ошибка сервера при удалении.');
+      }
+    }
+</script>
+</body>
+</html>
