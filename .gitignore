@@ -1,2 +1,2 @@
 .env
-database.js
+config/database.js
